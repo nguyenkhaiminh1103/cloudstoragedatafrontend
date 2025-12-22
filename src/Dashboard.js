@@ -27,6 +27,7 @@ function Dashboard() {
     try {
       const res = await api.post("/upload", form);
       const data = res.data || {};
+      console.log("upload response:", data);
       // optimistic update: if backend returned the uploaded file url, prepend it to the list
       if (data.url) {
         const newFile = {
@@ -34,7 +35,11 @@ function Dashboard() {
           url: data.url,
           size: data.bytes || file.size,
         };
-        setFiles((prev) => [newFile, ...(prev || [])]);
+        setFiles((prev) => {
+          const next = [newFile, ...(prev || [])];
+          console.log('files after optimistic update:', next);
+          return next;
+        });
       } else {
         // fallback: refresh from server
         await fetchFiles();
