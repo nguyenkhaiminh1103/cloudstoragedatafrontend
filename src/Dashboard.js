@@ -25,10 +25,24 @@ function Dashboard() {
     const form = new FormData();
     form.append("file", file);
     try {
-      await api.post("/upload", form);
+      const res = await api.post("/upload", form);
+      const data = res.data || {};
+      // optimistic update: if backend returned the uploaded file url, prepend it to the list
+      if (data.url) {
+        const newFile = {
+          name: data.filename || data.public_id || file.name,
+          url: data.url,
+          size: data.bytes || file.size,
+        };
+        setFiles((prev) => [newFile, ...(prev || [])]);
+      } else {
+        // fallback: refresh from server
+        await fetchFiles();
+      }
+
       alert("Upload thành công");
-      await fetchFiles();
     } catch (err) {
+      console.error(err);
       alert("Upload thất bại");
     } finally {
       setUploading(false);
