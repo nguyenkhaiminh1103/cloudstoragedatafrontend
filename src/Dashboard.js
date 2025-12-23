@@ -32,7 +32,10 @@ function Dashboard() {
     const form = new FormData();
     form.append("file", file);
     try {
-      const res = await api.post("/upload", form);
+      // Ensure token is explicitly sent for debugging (api interceptor also sets it)
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await api.post("/upload", form, { headers });
       const data = res.data || {};
       console.log("upload response:", data);
       // optimistic update: if backend returned the uploaded file url, prepend it to the list
@@ -55,8 +58,14 @@ function Dashboard() {
 
       alert("Upload thành công");
     } catch (err) {
-      console.error(err);
-      alert("Upload thất bại");
+      console.error('Upload error:', err);
+      if (err.response) {
+        console.error('Status:', err.response.status);
+        console.error('Body:', err.response.data);
+        alert(`Upload thất bại: ${err.response.status} ${JSON.stringify(err.response.data)}`);
+      } else {
+        alert(`Upload thất bại: ${err.message}`);
+      }
     } finally {
       setUploading(false);
     }
